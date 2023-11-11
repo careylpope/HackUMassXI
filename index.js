@@ -29,7 +29,7 @@ const UserSchema = new mongoose.Schema({
 const PostSchema = new mongoose.Schema({
 user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 content: String,
-eventTime: Date,
+eventTime: String,
 participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 location: {lat: Number, long: Number},
 });
@@ -37,12 +37,11 @@ location: {lat: Number, long: Number},
 const User = mongoose.model('User', UserSchema);
 const Post = mongoose.model('Post', PostSchema);
 
-
 // API endpoint to create a user
 app.post('/api/users', async (req, res) => {
   try {
     const user = new User(req.body);
-    user.save();
+    await user.save();
     res.status(201).json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -57,7 +56,7 @@ app.get('/api/users', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
-  })
+})
 
 // API endpoint to get user details based on phoneNumber
 app.get('/api/users/:phoneNumber', async (req, res) => {
@@ -82,16 +81,34 @@ app.post('/api/posts', async (req, res) => {
   }
 });
 
-// API endpoint to get posts
+// API endpoint to return all posts 
 app.get('/api/posts', async (req, res) => {
-  try {
-    const posts = await Post.find().populate('user').populate('participants');
-    res.json(posts);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+    try {
+        const users = await Post.find();
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
+
+  // API endpoint to user's post 
+app.get('/api/posts/:phoneNumber', async (req, res) => {
+    try {
+        //const user = await User.findById(req.params.userId)//.populate('friends');
+        const phoneNumber = req.params.phoneNumber;
+        const user = await User.findOne({ phoneNumber });
+        const userID = user._id
+        const post = await User.findById(userID)
+        res.json(post);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+});
+
+
+
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
