@@ -47,6 +47,7 @@ This is part of the project *"Bubble Up"*, our teams project for HackUMass XI.
 |       /signin| Returns JSON of a user, if provided JSON containing sign-in criteria is a match for database|
 |       /users/| Returns JSON containing a user through passed parameters|
 |       /posts/| Returns JSON containing a post through passed parameters|
+|    /joinPost/| Returns JSON containing updated post with user added as a participant through passed parameters|
 |  /removePost/| Removes a user posts through passed parameters|
 |   /addFriend/| Returns JSON containing updated user with new friend added through passed parameters|
 |/removeFriend/| Returns JSON containing updated user with friend removed through passed parameters|
@@ -93,6 +94,9 @@ Example: *..../users/4135556879*
 - **/posts/:phoneNumber**: Returns JSON data of a specific post by passed phoneNumber paramater, if one exists.  
 Example: *..../posts/4135556879*  
 
+- **/joinPost/:phoneNumber/:cellphone**: Returns JSON data of updated post with new participant added, given by passed passed phoneNumber and cellphone parameters respectively.
+Example: *..../joinPost/4135556789/911*
+  
 - **/removePost/:phoneNumber**: Returns JSON data of result of "deleteOne(...)", deleting a post through passed phoneNumber parameter, if one exists.  Also deletes the link to the post stored in the user with this unique phoneNumber.
 Example: *..../removePost/4135556879*
 
