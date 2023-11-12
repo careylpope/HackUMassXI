@@ -19,9 +19,9 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 // Define mongoose schemas and models
 const UserSchema = new mongoose.Schema({
-    phoneNumber: { type: String, required: true, unique: true },
-    username: {type: String, required: true},
-    password: {type: String, required: true},
+    phoneNumber: String,
+    username: String,
+    password: String,
     friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     ///favoriteFriends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     currentPost: {type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
@@ -34,11 +34,11 @@ UserSchema.pre('save', function(next) {
   if (!user.isModified('password')) return next();
 
   // generate a salt
-  bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
+  bcrypt.genSalt(SALT_WORK_FACTOR, (err, salt) => {
       if (err) return next(err);
 
       // hash the password using our new salt
-      bcrypt.hash(user.password, salt, function(err, hash) {
+      bcrypt.hash(user.password, salt, (err, hash) => {
           if (err) return next(err);
 
           // override the cleartext password with the hashed one
@@ -48,10 +48,10 @@ UserSchema.pre('save', function(next) {
   });
 });
 
-UserSchema.methods.comparePassword = function(candidatePassword, cb) {
-  bcrypt.compare(candidatePassword, this.password, function(err, isMatch) {
-      if (err) return cb(err);
-      cb(null, isMatch);
+UserSchema.methods.comparePassword = (candidatePassword) => {
+  bcrypt.compare(candidatePassword, this.password, (err, isMatch) => {
+    if (err) return err;
+    return isMatch;
   });
 };
   
@@ -157,6 +157,21 @@ app.put('/api/users/:phoneNumber1/:phoneNumber2', async (req, res) => {
     const user = await User.findOne({ phoneNumber1 });
     const friend = await User.findOne({ phoneNumber2 });
     user.friends = user.friends.filter(f => f !== friend);
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message});
+  }
+});
+
+// API endpoint to sign in user
+app.get('/api/signIn', async (req, res) => {
+  try {
+    const phoneNumber = req.body.phoneNumber;
+    const password = req.body.password;
+    const user = await User.findOne(phoneNumber);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const passwordMatch = await user.comparePassword(password);
+    if (!passwordMatch) return res.status(401).json({ error: 'Incorrect password' });
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: error.message});
