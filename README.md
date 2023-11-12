@@ -1,5 +1,30 @@
-# HackUMassXI
+# Bubble Up: Backend
 
+## What is this?
+This is the repository built for the purpose of hosting of a server for our teams mobile app *"Bubble Up"*.  It works using a node.js
+
+
+## User/Post Schemas
+### User:  
+```
+{
+    phoneNumber: { type: String, unique: true },
+    username: String,
+    password: String,
+    friends: [{ type: String }],
+    currentPost: String,
+}
+```
+### Post: 
+```
+{
+  phoneNumber: String,
+  content: String,
+  eventTime: String,
+  participants: [{ type: String }],
+  location: {lat: Number, long: Number},
+}
+```
 ## API Endpoints
 
 ### General Descriptions
