@@ -1,4 +1,3 @@
-
 import express from 'express';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
@@ -12,11 +11,16 @@ const SALT_WORK_FACTOR = 10;
 app.use(cors());
 app.use(bodyParser.json());
 
+//const apiUrl = "https://nam5.cloudfunctions.net/api";
+
 // Connect to MongoDB (you should replace 'your_mongodb_uri' with your actual MongoDB URI)
 mongoose.connect('mongodb+srv://clpope:Quacksc0ped!@cluster0.doek1sv.mongodb.net/', { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.once('open', () => {
+  console.log('Connected to MongoDB');
+});
 
 // Define mongoose schemas and models
 const UserSchema = new mongoose.Schema({
@@ -201,6 +205,6 @@ app.get('/api/signIn', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
 });
