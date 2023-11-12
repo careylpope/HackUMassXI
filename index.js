@@ -20,12 +20,12 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 // Define mongoose schemas and models
 const UserSchema = new mongoose.Schema({
-    phoneNumber: String,
+    phoneNumber: { type: String, unique: true },
     username: String,
     password: String,
-    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    ///favoriteFriends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    currentPost: {type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
+    friends: [{ type: String }],
+    //favoriteFriends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    currentPost: String,
   });
 
 UserSchema.pre('save', async function (next) {
@@ -54,10 +54,10 @@ UserSchema.methods.comparePassword = async function (candidatePassword) {
 };
   
 const PostSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  phoneNumber: String,
   content: String,
   eventTime: String,
-  participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  participants: [{ type: String }],
   location: {lat: Number, long: Number},
 });
 
@@ -101,7 +101,11 @@ app.get('/api/users/:phoneNumber', async (req, res) => {
 app.post('/api/posts', async (req, res) => {
   try {
     const post = new Post(req.body);
+    const phoneNumber = req.body.phoneNumber;
+    const [user] = User.find({ phoneNumber });
+    user.currentPost = post._id;
     await post.save();
+    await user.save();
     res.status(201).json(post);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -133,50 +137,45 @@ app.get('/api/posts/:phoneNumber', async (req, res) => {
 });
 
 // API endpoint to add friend to user
-app.put('/api/users/:phoneNumber1/:phoneNumber2', async (req, res) => {
+app.post('/addFriend/:phoneNumber/:cellphone', async (req, res) => {
   try {
-    //const user = await User.findById(req.params.userId)//.populate('friends');
-    const phoneNumber1 = req.params.phoneNumber1;
-    const phoneNumber2 = req.params.phoneNumber2;
-    const user = await User.findOne({ phoneNumber1 });
-    const friend = await User.findOne({ phoneNumber2 });
-    user.friends.push(friend);
+    const phoneNumber = req.params.phoneNumber;
+    const cellphone = req.params.cellphone;
+    const [user] = await User.find({ phoneNumber: phoneNumber });
+    const [friend] = await User.find({ phoneNumber: cellphone });
+    if (user.friends.some(fph => fph === friend.phoneNumber)) return res.status(404).json({ error: 'Friend already added' });
+    user.friends.push(friend.phoneNumber);
+    await user.save();
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// API endpoint to remove friend from user
-app.put('/api/users/:phoneNumber1/:phoneNumber2', async (req, res) => {
+// API endpoint to add friend to user
+app.post('/removeFriend/:phoneNumber/:cellphone', async (req, res) => {
   try {
-    const phoneNumber1 = req.params.phoneNumber1;
-    const phoneNumber2 = req.params.phoneNumber2;
-    const user = await User.findOne({ phoneNumber1 });
-    const friend = await User.findOne({ phoneNumber2 });
-    user.friends = user.friends.filter(f => f !== friend);
+    const phoneNumber = req.params.phoneNumber;
+    const cellphone = req.params.cellphone;
+    const [user] = await User.find({ phoneNumber: phoneNumber });
+    const [friend] = await User.find({ phoneNumber: cellphone });
+    if (!user.friends.some(fph => fph === friend.phoneNumber)) return res.status(404).json({ error: 'Friend doesn\'t exist' });
+    user.friends = user.friends.filter(fph => !(fph === friend.phoneNumber));
+    await user.save();
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: error.message});
+    res.status(500).json({ error: error.message });
   }
 });
 
 // API endpoint to sign in user
 app.get('/api/signIn', async (req, res) => {
-  async function checkPassword(err, user){
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    const passwordMatch = await user.comparePassword(password);  
-    if(!passwordMatch) return res.status(401).json({ error: 'Incorrect password' });
-    return user;
-  }
-
   try {
     const phoneNumber = req.body.phoneNumber;
     const password = req.body.password;
     const user = await User.findOne({ phoneNumber });  
     if (!user) return res.status(404).json({ error: 'User not found' });
     const passwordMatch = await user.comparePassword(password);
-    //if(!(bcrypt.hash(password) === user.password?.toString))  return res.status(401).json({ error: 'Incorrect password' });  
     if (!passwordMatch) return res.status(401).json({ error: 'Incorrect password' });
     res.json(user);
   } catch (error) {
