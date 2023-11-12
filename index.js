@@ -141,6 +141,22 @@ app.get('/api/posts/:phoneNumber', async (req, res) => {
     }
 });
 
+// API endpoint to add a participant to post
+app.post('/api/joinPost/:phoneNumber/:cellphone', async (req, res) => {
+  try {
+    const phoneNumber = req.params.phoneNumber;
+    const cellphone = req.params.cellphone;
+    const [poster] = await User.find({ phoneNumber: phoneNumber });
+    const postID = poster.currentPost;
+    const post = await Post.findById(postID);
+    post.participants.push(cellphone);
+    post.save();
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // API endpoint to 'pop' a user's post
 app.delete('/api/removePost/:phoneNumber', async (req, res) => {
   try {
