@@ -1,7 +1,7 @@
 # Bubble Up: Backend
 
 ## What is this?
-This is the repository built for the purpose of hosting of a server for our teams mobile app *"Bubble Up"*.  It works using node.js in combination with Mongoose + MongoDB Atlas, Bcrpyt, and Render in order to provide remote access to data.  
+This is the repository built for the purpose of hosting of a server for our teams mobile app *"Bubble Up"*.  It works using node.js and express in combination with Mongoose + MongoDB Atlas, Bcrpyt, and Render in order to provide remote access to data.  
 - **Mongoose + MongoDB Atlas:** The cloud service that remotely hosts our 'cluster' - the collection of data on our users and posts
 - **Bcrpyt:** The encryption tool we use to store hashed passwords for our accounts, and to check passwords on sign-in attempts
 - **Render:** The hosting service that acts as the remote access point for connection to our backend
