@@ -98,11 +98,11 @@ app.get('/api/users/:phoneNumber', async (req, res) => {
 });
 
 // API endpoint to create a post
-app.post('/api/posts', async (req, res) => {
+app.post('/api/createPost', async (req, res) => {
   try {
     const post = new Post(req.body);
     const phoneNumber = req.body.phoneNumber;
-    const [user] = User.find({ phoneNumber });
+    const user = await User.findOne({ phoneNumber });
     user.currentPost = post._id;
     await post.save();
     await user.save();
@@ -122,18 +122,34 @@ app.get('/api/posts', async (req, res) => {
     }
 });
 
-  // API endpoint to user's post 
+// API endpoint to return a user's post 
 app.get('/api/posts/:phoneNumber', async (req, res) => {
-    try {
-        //const user = await User.findById(req.params.userId)//.populate('friends');
-        const phoneNumber = req.params.phoneNumber;
-        const user = await User.findOne({ phoneNumber });
-        const userID = user._id
-        const post = await User.findById(userID)
-        res.json(post);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
-      }
+  try {
+      //const user = await User.findById(req.params.userId)//.populate('friends');
+      const phoneNumber = req.params.phoneNumber;
+      const [user] = await User.find({ phoneNumber: phoneNumber });
+      const postID = user.currentPost;
+      const post = await Post.findById(postID);
+      res.json(post);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+});
+
+// API endpoint to 'pop' a user's post
+app.post('/api/removePost/:phoneNumber', async (req, res) => {
+  try {
+      //const user = await User.findById(req.params.userId)//.populate('friends');
+      const phoneNumber = req.params.phoneNumber;
+      const [user] = await User.find({ phoneNumber: phoneNumber });
+      user.currentPost = null;
+      await user.save();
+      const postID = user.currentPost;
+      const post = await Post.findOneAndDelete(postID);
+      res.json(post);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
 });
 
 // API endpoint to add friend to user
