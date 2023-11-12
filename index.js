@@ -65,7 +65,7 @@ const User = mongoose.model('User', UserSchema);
 const Post = mongoose.model('Post', PostSchema);
 
 // API endpoint to create a user
-app.post('/api/users', async (req, res) => {
+app.post('/api/createUser', async (req, res) => {
   try {
     const user = new User(req.body);
     await user.save();
@@ -137,16 +137,17 @@ app.get('/api/posts/:phoneNumber', async (req, res) => {
 });
 
 // API endpoint to 'pop' a user's post
-app.post('/api/removePost/:phoneNumber', async (req, res) => {
+app.delete('/api/removePost/:phoneNumber', async (req, res) => {
   try {
       //const user = await User.findById(req.params.userId)//.populate('friends');
       const phoneNumber = req.params.phoneNumber;
       const [user] = await User.find({ phoneNumber: phoneNumber });
-      const [post] = await Post.find({ postID: user.currentPost});
-      user.currentPost = "";
-      await user.save();
+      const [post] = await Post.find({ _id: user.currentPost });
       const deletedPost = await Post.deleteOne(post);
-      Post.delete
+      if(deletedPost){
+        user.currentPost = "";
+        await user.save();
+      }
       res.json(deletedPost);
     } catch (error) {
       res.status(500).json({ error: error.message });
