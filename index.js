@@ -1,3 +1,4 @@
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
@@ -27,32 +28,29 @@ const UserSchema = new mongoose.Schema({
     currentPost: {type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
   });
 
-UserSchema.pre('save', function(next) {
-  const user = this;
+UserSchema.pre('save', async function (next) {
+    const user = this;
 
-  // only hash the password if it has been modified (or is new)
-  if (!user.isModified('password')) return next();
-
-  // generate a salt
-  bcrypt.genSalt(SALT_WORK_FACTOR, (err, salt) => {
-      if (err) return next(err);
-
-      // hash the password using our new salt
-      bcrypt.hash(user.password, salt, (err, hash) => {
-          if (err) return next(err);
-
-          // override the cleartext password with the hashed one
-          user.password = hash;
-          next();
-      });
-  });
+    // only hash the password if it has been modified (or is new)
+    if (!user.isModified('password')) return next();
+    try {
+        const salt = await bcrypt.genSalt(SALT_WORK_FACTOR);  // generate a salt
+        const hash = await bcrypt.hash(user.password, salt);  // hash the password using our new salt
+        user.password = hash;                                 // override the cleartext password with the hashed one
+        next();
+    } catch (error) {
+        return nexT(error);
+    }
 });
 
-UserSchema.methods.comparePassword = (candidatePassword) => {
-  bcrypt.compare(candidatePassword, this.password, (err, isMatch) => {
-    if (err) return err;
-    return isMatch;
-  });
+// Compare passwords method
+UserSchema.methods.comparePassword = async function (candidatePassword) {
+  try {
+      const isMatch = await bcrypt.compare(candidatePassword, this.password);
+      return isMatch;
+  } catch (error) {
+      throw error;
+  }
 };
   
 const PostSchema = new mongoose.Schema({
@@ -165,12 +163,20 @@ app.put('/api/users/:phoneNumber1/:phoneNumber2', async (req, res) => {
 
 // API endpoint to sign in user
 app.get('/api/signIn', async (req, res) => {
+  async function checkPassword(err, user){
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const passwordMatch = await user.comparePassword(password);  
+    if(!passwordMatch) return res.status(401).json({ error: 'Incorrect password' });
+    return user;
+  }
+
   try {
     const phoneNumber = req.body.phoneNumber;
     const password = req.body.password;
-    const user = await User.findOne(phoneNumber);
+    const user = await User.findOne({ phoneNumber });  
     if (!user) return res.status(404).json({ error: 'User not found' });
     const passwordMatch = await user.comparePassword(password);
+    //if(!(bcrypt.hash(password) === user.password?.toString))  return res.status(401).json({ error: 'Incorrect password' });  
     if (!passwordMatch) return res.status(401).json({ error: 'Incorrect password' });
     res.json(user);
   } catch (error) {
