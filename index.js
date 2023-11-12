@@ -1,3 +1,4 @@
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
@@ -159,7 +160,7 @@ app.delete('/api/removePost/:phoneNumber', async (req, res) => {
 });
 
 // API endpoint to add friend to user
-app.post('/addFriend/:phoneNumber/:cellphone', async (req, res) => {
+app.post('/api/addFriend/:phoneNumber/:cellphone', async (req, res) => {
   try {
     const phoneNumber = req.params.phoneNumber;
     const cellphone = req.params.cellphone;
@@ -175,7 +176,7 @@ app.post('/addFriend/:phoneNumber/:cellphone', async (req, res) => {
 });
 
 // API endpoint to add friend to user
-app.post('/removeFriend/:phoneNumber/:cellphone', async (req, res) => {
+app.post('/api/removeFriend/:phoneNumber/:cellphone', async (req, res) => {
   try {
     const phoneNumber = req.params.phoneNumber;
     const cellphone = req.params.cellphone;
