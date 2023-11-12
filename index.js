@@ -142,11 +142,12 @@ app.post('/api/removePost/:phoneNumber', async (req, res) => {
       //const user = await User.findById(req.params.userId)//.populate('friends');
       const phoneNumber = req.params.phoneNumber;
       const [user] = await User.find({ phoneNumber: phoneNumber });
-      user.currentPost = null;
+      const [post] = await Post.find({ postID: user.currentPost});
+      user.currentPost = "";
       await user.save();
-      const postID = user.currentPost;
-      const post = await Post.findOneAndDelete(postID);
-      res.json(post);
+      const deletedPost = await Post.deleteOne(post);
+      Post.delete
+      res.json(deletedPost);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
